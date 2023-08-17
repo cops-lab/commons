@@ -8,11 +8,11 @@
     </parent>
 
     <artifactId>commons</artifactId>
-    <version>0.0.3</version>
+    <version>0.0.4-SNAPSHOT</version>
 
     <properties>
         <!-- automatically set through: mvn versions:set -DupdateBuildOutputTimestampPolicy=always -DnewVersion=... -->
-        <project.build.outputTimestamp>2023-08-17T23:15:29Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2023-08-17T23:17:27Z</project.build.outputTimestamp>
     </properties>
 
     <repositories>
