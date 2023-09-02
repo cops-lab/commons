@@ -16,14 +16,46 @@
 package dev.c0ps.commons;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 
 public class ResourceUtils {
 
-    public static File getResource(String path) {
-        var r = Thread.currentThread().getContextClassLoader().getResource(path);
+    private static ClassLoader cl() {
+        return Thread.currentThread().getContextClassLoader();
+    }
+
+    public static File getTestResource(String path) {
+        var r = cl().getResource(path);
         if (r == null) {
             throw new IllegalArgumentException("Resource not found: " + path);
         }
         return new File(r.getPath());
+    }
+
+    public static InputStream openResourceAsStream(String path) {
+        var is = cl().getResourceAsStream(path);
+        if (is == null) {
+            throw new IllegalArgumentException("Resource not found: " + path);
+        }
+        return is;
+    }
+
+    public static String readResourceToString(String path, Charset charset) {
+        try (var is = openResourceAsStream(path)) {
+            var bufferSize = 1024;
+            var buffer = new char[bufferSize];
+            var out = new StringBuilder();
+            var in = new InputStreamReader(is, charset);
+            var numRead = 0;
+            while ((numRead = in.read(buffer, 0, buffer.length)) > 0) {
+                out.append(buffer, 0, numRead);
+            }
+            return out.toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
