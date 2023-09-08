@@ -16,6 +16,7 @@
 package dev.c0ps.commons;
 
 import static dev.c0ps.commons.ResourceUtils.getTestResource;
+import static dev.c0ps.test.TestLoggerUtils.assertLogsContain;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -25,12 +26,20 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import dev.c0ps.test.TestLoggerUtils;
 
 public class ResourceUtilsTest {
 
     private static final String CONTENT_SOME = "some content";
     private static final String CONTENT_OTHER = "other content";
+
+    @BeforeEach
+    public void setup() {
+        TestLoggerUtils.clearLog();
+    }
 
     @Test
     public void get_relativeFiles() {
@@ -47,6 +56,17 @@ public class ResourceUtilsTest {
         assertTrue(f.exists());
         // the "replace" makes this test pass on Windows
         assertTrue(f.getPath().replace(File.separatorChar, '/').endsWith(path));
+    }
+
+    @Test
+    public void get_filesInSubfoldersWindows() {
+        var path = "subfolder\\otherfile.txt";
+        var f = getTestResource(path);
+        assertTrue(f.exists());
+        // the "replace" makes this test pass on Windows
+        assertTrue(f.getPath().replace('\\', '/').endsWith(path.replace('\\', '/')));
+        var expectedLog = "INFO Do not use backslashes in resource paths (subfolder\\otherfile.txt), use forward slashes instead.";
+        assertLogsContain(ResourceUtils.class, expectedLog);
     }
 
     @Test
@@ -73,6 +93,15 @@ public class ResourceUtilsTest {
     }
 
     @Test
+    public void open_filesInSubfoldersWindows() {
+        var actual = openAndRead("subfolder\\otherfile.txt");
+        var expected = CONTENT_OTHER;
+        assertEquals(expected, actual);
+        var expectedLog = "INFO Do not use backslashes in resource paths (subfolder\\otherfile.txt), use forward slashes instead.";
+        assertLogsContain(ResourceUtils.class, expectedLog);
+    }
+
+    @Test
     public void open_fileNotFound() {
         var path = "doesNotExist.txt";
         var e = assertThrows(IllegalArgumentException.class, () -> {
@@ -93,6 +122,15 @@ public class ResourceUtilsTest {
         var actual = ResourceUtils.readResourceToString("subfolder/otherfile.txt", UTF_8);
         var expected = CONTENT_OTHER;
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void read_filesInSubfoldersWindows() {
+        var actual = ResourceUtils.readResourceToString("subfolder\\otherfile.txt", UTF_8);
+        var expected = CONTENT_OTHER;
+        assertEquals(expected, actual);
+        var expectedLog = "INFO Do not use backslashes in resource paths (subfolder\\otherfile.txt), use forward slashes instead.";
+        assertLogsContain(ResourceUtils.class, expectedLog);
     }
 
     @Test

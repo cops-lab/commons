@@ -21,13 +21,19 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ResourceUtils {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ResourceUtils.class);
 
     private static ClassLoader cl() {
         return Thread.currentThread().getContextClassLoader();
     }
 
     public static File getTestResource(String path) {
+        path = fixWindowsPaths(path);
         var r = cl().getResource(path);
         if (r == null) {
             throw new IllegalArgumentException("Resource not found: " + path);
@@ -36,6 +42,7 @@ public class ResourceUtils {
     }
 
     public static InputStream openResourceAsStream(String path) {
+        path = fixWindowsPaths(path);
         var is = cl().getResourceAsStream(path);
         if (is == null) {
             throw new IllegalArgumentException("Resource not found: " + path);
@@ -44,6 +51,7 @@ public class ResourceUtils {
     }
 
     public static String readResourceToString(String path, Charset charset) {
+        path = fixWindowsPaths(path);
         try (var is = openResourceAsStream(path)) {
             var bufferSize = 1024;
             var buffer = new char[bufferSize];
@@ -57,5 +65,13 @@ public class ResourceUtils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static String fixWindowsPaths(String path) {
+        if (!path.contains("\\")) {
+            return path;
+        }
+        LOG.info("Do not use backslashes in resource paths ({}), use forward slashes instead.", path);
+        return path.replaceAll("\\\\", "/");
     }
 }
